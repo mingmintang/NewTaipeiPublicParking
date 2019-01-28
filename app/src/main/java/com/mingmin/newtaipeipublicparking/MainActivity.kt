@@ -47,38 +47,30 @@ class MainActivity : AppCompatActivity(), ParkingRecyclerViewAdapter.ItemClickLi
             override fun onNothingSelected(parent: AdapterView<*>?) {}
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (position == 0) {
-                    readAllRecords()
-                } else {
-                    readRecords()
-                }
+                readRecords()
             }
-        }
-    }
-
-    private fun readAllRecords() {
-        showLoading()
-        if (parkingDAO.count() > 0) {
-            readAllRecordsFromDb()
-        } else {
-            updateAndReadAllRecordsFromDb()
         }
     }
 
     private fun readRecords() {
         main_search_input.clearFocus()
         showLoading()
-        var area: String? = null
-        var keyword: String? = null
-        if (main_area_spinner.selectedItemPosition > 0) {
-            area = main_area_spinner.selectedItem.toString()
-        }
-        main_search_input.text?.let {
-            if (it.isNotEmpty()) {
-                keyword = main_search_input.text.toString()
+
+        if (parkingDAO.count() > 0) {
+            var area: String? = null
+            var keyword: String? = null
+            if (main_area_spinner.selectedItemPosition > 0) {
+                area = main_area_spinner.selectedItem.toString()
             }
+            main_search_input.text?.let {
+                if (it.isNotEmpty()) {
+                    keyword = main_search_input.text.toString()
+                }
+            }
+            readRecordsFromDb(area, keyword)
+        } else {
+            updateAndReadAllRecordsFromDb()
         }
-        readRecordsFromDb(area, keyword)
     }
 
     private fun setupParkingList(records: ArrayList<Record>) {
@@ -111,12 +103,6 @@ class MainActivity : AppCompatActivity(), ParkingRecyclerViewAdapter.ItemClickLi
         main_area_spinner.isEnabled = isEnabled
         main_search_button.isEnabled = isEnabled
         main_search_input.isEnabled = isEnabled
-    }
-
-    private fun readAllRecordsFromDb() {
-        Databases.readAllRecords(parkingDAO, disposables)
-            .addOnSuccessListener { setupParkingList(it) }
-            .addOnFailureListener { println(it); showEmptyInfo() }
     }
 
     private fun updateAndReadAllRecordsFromDb() {

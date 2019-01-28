@@ -27,8 +27,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            app:layout_scrollFlags="scroll|enterAlways">
+            android:layout_marginBottom="8dp">
 
             <android.support.constraint.Guideline
                 android:id="@+id/main_toolbar_guideline1"
