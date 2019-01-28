@@ -47,6 +47,11 @@ class MainActivity : AppCompatActivity(), ParkingRecyclerViewAdapter.ItemClickLi
             override fun onNothingSelected(parent: AdapterView<*>?) {}
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                parent?.tag?.let {
+                    val notRead = it as String
+                    parent.tag = null
+                    if (notRead == "not_read") return
+                }
                 readRecords()
             }
         }
@@ -73,29 +78,44 @@ class MainActivity : AppCompatActivity(), ParkingRecyclerViewAdapter.ItemClickLi
         }
     }
 
+    private fun refreshRecords() {
+        main_area_spinner.tag = "not_read"
+        main_area_spinner.setSelection(0)
+        main_search_input.text?.clear()
+        main_search_input.clearFocus()
+        showLoading()
+        updateAndReadAllRecordsFromDb()
+    }
+
     private fun setupParkingList(records: ArrayList<Record>) {
         showParkingList()
         main_parking_list.adapter = ParkingRecyclerViewAdapter(records, this)
+
+        main_parking_list_container.setDistanceToTriggerSync(1000)
+        main_parking_list_container.setOnRefreshListener {
+            refreshRecords()
+            main_parking_list_container.isRefreshing = false
+        }
     }
 
     private fun showParkingList() {
         main_loading.visibility = View.GONE
         main_empty.visibility = View.GONE
-        main_parking_list.visibility = View.VISIBLE
+        main_parking_list_container.visibility = View.VISIBLE
         controllerComponentsEnabled(true)
     }
 
     private fun showEmptyInfo() {
         main_loading.visibility = View.GONE
         main_empty.visibility = View.VISIBLE
-        main_parking_list.visibility = View.GONE
+        main_parking_list_container.visibility = View.GONE
         controllerComponentsEnabled(true)
     }
 
     private fun showLoading() {
         main_loading.visibility = View.VISIBLE
         main_empty.visibility = View.GONE
-        main_parking_list.visibility = View.GONE
+        main_parking_list_container.visibility = View.GONE
         controllerComponentsEnabled(false)
     }
 
