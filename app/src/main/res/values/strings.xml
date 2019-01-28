@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">NewTaipeiPublicParking</string>
+    <string name="parking_list_title">新北市路外公用停車場</string>
+    <string name="data_downloading">下載資料中...</string>
+    <string name="parking_name">停車場名稱</string>
+    <string name="area">區域</string>
+    <string name="servicetime">服務時間</string>
+    <string name="address">地址</string>
+    <string name="empty_description">沒有資料\n請嘗試重新載入</string>
+    <string name="title_activity_detail_map">Map</string>
+</resources>
