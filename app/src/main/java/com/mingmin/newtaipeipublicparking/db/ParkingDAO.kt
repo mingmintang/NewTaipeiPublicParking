@@ -55,17 +55,38 @@ class ParkingDAO(context: Context) {
         return db.execSQL(SQL_CLEAR_TABLE)
     }
 
-    fun queryAll(): ArrayList<Record> {
+    fun queryAll(): ArrayList<Record>? {
         val records = ArrayList<Record>()
         val cursor = db.query(TABLE_NAME, null, null, null, null, null, null)
         while (cursor.moveToNext()) {
             records.add(getRecord(cursor))
         }
         cursor.close()
-        return records
+        return if (records.isEmpty()) null else records
     }
 
-    fun getRecord(cursor: Cursor): Record {
+    fun queryByAreaAndKeyword(area: String?, keyword: String?): ArrayList<Record>? {
+        val records = ArrayList<Record>()
+        var where = ""
+        area?.let {
+            where += "$COLUMN_AREA='$area'"
+        }
+        keyword?.let {
+            if (where.length != 0) {
+                where += " AND "
+            }
+            where += "$COLUMN_NAME LIKE '%$keyword%'"
+        }
+        val selection = if (where.isEmpty()) null else where
+        val cursor = db.query(TABLE_NAME, null, selection, null, null, null, null)
+        while (cursor.moveToNext()) {
+            records.add(getRecord(cursor))
+        }
+        cursor.close()
+        return if (records.isEmpty()) null else records
+    }
+
+    private fun getRecord(cursor: Cursor): Record {
         return Record(
             _id = cursor.getLong(0),
             ID = cursor.getInt(1),

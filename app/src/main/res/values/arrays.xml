@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="new_taipei_areas">
+        <item>所有區域</item>
+        <item>萬里區</item>
+        <item>金山區</item>
+        <item>板橋區</item>
+        <item>汐止區</item>
+        <item>深坑區</item>
+        <item>石碇區</item>
+        <item>瑞芳區</item>
+        <item>平溪區</item>
+        <item>雙溪區</item>
+        <item>貢寮區</item>
+        <item>新店區</item>
+        <item>坪林區</item>
+        <item>烏來區</item>
+        <item>永和區</item>
+        <item>中和區</item>
+        <item>土城區</item>
+        <item>三峽區</item>
+        <item>樹林區</item>
+        <item>鶯歌區</item>
+        <item>三重區</item>
+        <item>新莊區</item>
+        <item>泰山區</item>
+        <item>林口區</item>
+        <item>蘆洲區</item>
+        <item>五股區</item>
+        <item>八里區</item>
+        <item>淡水區</item>
+        <item>三芝區</item>
+        <item>石門區</item>
+    </string-array>
+</resources>

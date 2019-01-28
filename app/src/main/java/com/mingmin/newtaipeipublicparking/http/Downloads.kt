@@ -18,7 +18,7 @@ import java.lang.Exception
 class Downloads {
     companion object {
         val DOWNLOAD_URL = "http://data.ntpc.gov.tw/api/v1/rest/datastore/382000000A-000225-002"
-        fun updateAndReadRecordsFromDb(parkingDAO: ParkingDAO, disposables: CompositeDisposable): Task<ArrayList<Record>> {
+        fun updateAndReadAllRecordsFromDb(parkingDAO: ParkingDAO, disposables: CompositeDisposable): Task<ArrayList<Record>> {
             val source = TaskCompletionSource<ArrayList<Record>>()
 
             val client = OkHttpClient()
