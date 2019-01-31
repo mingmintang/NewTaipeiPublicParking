@@ -213,4 +213,38 @@
         app:layout_constraintStart_toStartOf="parent"
         android:name="com.google.android.gms.maps.SupportMapFragment" />
 
+    <FrameLayout
+        android:id="@+id/detail_routes_shadow"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="11dp"
+        android:layout_marginBottom="99dp"
+        android:background="#55CCCCCC"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ImageButton
+        android:id="@+id/detail_routes"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:onClick="onRoutesClick"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="100dp"
+        android:src="@drawable/ic_directions_24dp"
+        android:background="@drawable/bg_googlemap_button"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/detail_map_loading"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:indeterminateOnly="true"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </android.support.constraint.ConstraintLayout>
