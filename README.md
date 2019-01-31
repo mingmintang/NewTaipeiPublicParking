@@ -14,13 +14,24 @@
 6. 取得所在位置後地圖框新增路線規劃按鈕，可繪製建議路線
 <br/>
 
+### 注意事項：
+編譯專案需額外加入自己的Google Map和Google Directions的API Key<br/>
+新增google_maps_api.xml到專案位置：app/src/debug/res/values/google_maps_api.xml，內容如下：
+```
+<resources>
+    <string name="google_maps_key" translatable="false" templateMergeStrategy="preserve">YOUR_MAP_KEY</string>
+    <string name="google_directions_key" translatable="false" templateMergeStrategy="preserve">YOUR_DIRECTIONS_KEY</string>
+</resources>
+```
+<br>
+
 ### 程式預覽：
-**主頁面**列表顯示停車場資訊，提供搜尋功能<br/>
+**主頁面**：列表顯示停車場資訊，提供搜尋功能<br/>
 ![GITHUB](https://github.com/mingmintang/NewTaipeiPublicParking/blob/master/screenshot/main_page.jpg "主視窗")
 
-**詳細頁面**顯示停車場位置地圖資訊<br/>
+**詳細頁面**：顯示停車場位置地圖資訊<br/>
 ![GITHUB](https://github.com/mingmintang/NewTaipeiPublicParking/blob/master/screenshot/detail_page.jpg "詳細頁面")
 
-**路線規劃**按下路線規劃按鈕繪製建議路線<br/>
+**路線規劃**：按下路線規劃按鈕繪製建議路線<br/>
 ![GITHUB](https://github.com/mingmintang/NewTaipeiPublicParking/blob/master/screenshot/routes.jpg "路線規劃")
 
