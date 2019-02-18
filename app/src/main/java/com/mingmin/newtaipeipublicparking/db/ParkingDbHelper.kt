@@ -7,17 +7,17 @@ import android.database.sqlite.SQLiteOpenHelper
 class ParkingDbHelper(context: Context?, name: String?, factory: SQLiteDatabase.CursorFactory?, version: Int) :
     SQLiteOpenHelper(context, name, factory, version) {
     override fun onCreate(db: SQLiteDatabase?) {
-        db?.execSQL(ParkingDAO.SQL_CREATE_TABLE)
+        db?.execSQL(ParkingLotDaoImpl.SQL_CREATE_TABLE)
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db?.execSQL(ParkingDAO.SQL_DROP_TABLE)
+        db?.execSQL(ParkingLotDaoImpl.SQL_DROP_TABLE)
         onCreate(db)
     }
 
     companion object {
-        val DB_NAME = "parking.db"
-        val VERSION = 1
+        private const val DB_NAME = "parking.db"
+        private const val VERSION = 1
 
         fun getWritableDatabase(context: Context?): SQLiteDatabase {
             return ParkingDbHelper(context, DB_NAME, null, VERSION).writableDatabase
