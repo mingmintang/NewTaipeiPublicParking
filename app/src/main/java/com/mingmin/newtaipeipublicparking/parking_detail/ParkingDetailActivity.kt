@@ -20,11 +20,12 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.mingmin.newtaipeipublicparking.R
 import com.mingmin.newtaipeipublicparking.data.ParkingLot
 import com.mingmin.newtaipeipublicparking.data.Route
-import com.mingmin.newtaipeipublicparking.data.RouteServiceImpl
 import com.mingmin.newtaipeipublicparking.utils.Converts
+import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_parking_detail.*
 
 class ParkingDetailActivity : AppCompatActivity(), ParkingDetailContract.View {
+    private val disposables = CompositeDisposable()
     private lateinit var parkingLot: ParkingLot
     private lateinit var map: GoogleMap
     private lateinit var parkingLotLocation: LatLng
@@ -38,7 +39,7 @@ class ParkingDetailActivity : AppCompatActivity(), ParkingDetailContract.View {
         parkingLot = intent.getParcelableExtra("ParkingLot")
         parkingLotLocation = Converts.twd97ToLatLong(parkingLot.TW97X, parkingLot.TW97Y)
         setupViews()
-        presenter = ParkingDetailPresenter(RouteServiceImpl(), this)
+        presenter = ParkingDetailPresenter(disposables, this)
         presenter.loadMap(supportFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment)
     }
 
@@ -147,7 +148,7 @@ class ParkingDetailActivity : AppCompatActivity(), ParkingDetailContract.View {
 
     fun onRoutesClick(view: View) {
         myLocation?.let {
-            presenter.loadRoutes(this, it, parkingLotLocation, resources.getString(R.string.google_directions_key))
+            presenter.loadRoutes(it, parkingLotLocation, resources.getString(R.string.google_directions_key))
         }
     }
 }

@@ -5,13 +5,15 @@ import io.reactivex.Maybe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableMaybeObserver
+import io.reactivex.observers.DisposableSingleObserver
 import io.reactivex.schedulers.Schedulers
 
 class ParkingLotRepositoryImpl(
     private val parkingLotDao: ParkingLotDao,
-    private val disposables: CompositeDisposable,
-    private val parkingLotService: ParkingLotService)
+    private val disposables: CompositeDisposable)
     : ParkingLotRepository {
+
+    private val parkingLotService = ParkingLotService.create()
 
     private var loadListener: ParkingLotRepository.LoadListener? = null
 
@@ -24,13 +26,21 @@ class ParkingLotRepositoryImpl(
     }
 
     private fun updateAll() {
-        parkingLotService.getAllParkingLots { parkingLots ->
-            val operation = {
-                parkingLots?.let { parkingLotDao.updateAll(it) }
-                parkingLotDao.queryAll()
-            }
-            callDbOperationByRxJava(disposables, operation, LoadParkingLotsObserver())
-        }
+        disposables.add(
+            parkingLotService.getAllParkingLots()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableSingleObserver<List<ParkingLot>>() {
+                    override fun onSuccess(parkingLots: List<ParkingLot>) {
+                        val operation = {
+                            parkingLotDao.updateAll(parkingLots)
+                    parkingLotDao.queryAll()
+                        }
+                        callDbOperationByRxJava(disposables, operation, LoadParkingLotsObserver())
+                    }
+                    override fun onError(e: Throwable) { loadListener?.onParkingLotsLoadFail() }
+                })
+        )
     }
 
     override fun setLoadListener(listener: ParkingLotRepository.LoadListener) {

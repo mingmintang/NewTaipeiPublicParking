@@ -10,7 +10,6 @@ import com.mingmin.newtaipeipublicparking.R
 import com.mingmin.newtaipeipublicparking.data.ParkingLot
 import com.mingmin.newtaipeipublicparking.data.ParkingLotRepository
 import com.mingmin.newtaipeipublicparking.data.ParkingLotRepositoryImpl
-import com.mingmin.newtaipeipublicparking.data.ParkingLotServiceImpl
 import com.mingmin.newtaipeipublicparking.db.ParkingLotDao
 import com.mingmin.newtaipeipublicparking.db.ParkingLotDaoImpl
 import com.mingmin.newtaipeipublicparking.parking_detail.ParkingDetailActivity
@@ -29,11 +28,7 @@ class ParkingListActivity : AppCompatActivity(),
         setContentView(R.layout.activity_parking_list)
 
         parkingLotDao = ParkingLotDaoImpl(applicationContext)
-        parkingLotRepository = ParkingLotRepositoryImpl(
-            parkingLotDao,
-            dispoables,
-            ParkingLotServiceImpl()
-        )
+        parkingLotRepository = ParkingLotRepositoryImpl(parkingLotDao, dispoables)
         presenter = ParkingListPresenter(parkingLotRepository, this)
 
         setupAreaSpinner()

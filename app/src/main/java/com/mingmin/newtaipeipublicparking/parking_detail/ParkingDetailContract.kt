@@ -1,6 +1,5 @@
 package com.mingmin.newtaipeipublicparking.parking_detail
 
-import android.app.Activity
 import android.content.Context
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
@@ -22,7 +21,6 @@ interface ParkingDetailContract {
         fun loadMap(mapFragment: SupportMapFragment)
         fun loadMyLocation(context: Context)
         fun loadRoutes(
-            activity: Activity,
             myLocation: LatLng,
             parkingLotLocation: LatLng,
             googleDirectionsKey: String
