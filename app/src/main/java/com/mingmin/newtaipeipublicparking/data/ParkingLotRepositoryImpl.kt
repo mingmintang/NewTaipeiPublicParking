@@ -1,46 +1,37 @@
 package com.mingmin.newtaipeipublicparking.data
 
-import com.mingmin.newtaipeipublicparking.db.ParkingLotDao
+import com.mingmin.newtaipeipublicparking.platform_model.PlatformModel
 import io.reactivex.Maybe
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableMaybeObserver
-import io.reactivex.observers.DisposableSingleObserver
 import io.reactivex.schedulers.Schedulers
 
 class ParkingLotRepositoryImpl(
-    private val parkingLotDao: ParkingLotDao,
+    private val platformModel: PlatformModel,
     private val disposables: CompositeDisposable)
     : ParkingLotRepository {
 
-    private val parkingLotService = ParkingLotService.create()
-
+    private val parkingLotDao = platformModel.getParkingLotDao()
     private var loadListener: ParkingLotRepository.LoadListener? = null
 
     override fun getParkingLots(forceUpdate: Boolean, area: String?, keyword: String?) {
-        if (forceUpdate || parkingLotDao.count() == 0) {
+        if (forceUpdate) {
             updateAll()
-        } else {
-            getParkingLotsFromDb(area, keyword)
+            return
         }
+        val operation = { parkingLotDao.count() }
+        callDbOperationByRxJava(disposables, operation, object : DisposableMaybeObserver<Int>() {
+            override fun onSuccess(count: Int) {
+                if (count > 0) getParkingLotsFromDb(area, keyword) else updateAll()
+            }
+            override fun onComplete() {}
+            override fun onError(e: Throwable) { println(e) }
+        })
     }
 
     private fun updateAll() {
-        disposables.add(
-            parkingLotService.getAllParkingLots()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableSingleObserver<List<ParkingLot>>() {
-                    override fun onSuccess(parkingLots: List<ParkingLot>) {
-                        val operation = {
-                            parkingLotDao.updateAll(parkingLots)
-                    parkingLotDao.queryAll()
-                        }
-                        callDbOperationByRxJava(disposables, operation, LoadParkingLotsObserver())
-                    }
-                    override fun onError(e: Throwable) { loadListener?.onParkingLotsLoadFail() }
-                })
-        )
+        platformModel.startUpdateAllDataForegroundService()
     }
 
     override fun setLoadListener(listener: ParkingLotRepository.LoadListener) {

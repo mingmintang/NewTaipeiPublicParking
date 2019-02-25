@@ -231,7 +231,7 @@
         android:onClick="onRoutesClick"
         android:layout_marginEnd="12dp"
         android:layout_marginBottom="100dp"
-        android:src="@drawable/ic_directions_24dp"
+        android:src="@drawable/ic_directions_primary_24dp"
         android:background="@drawable/bg_googlemap_button"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"

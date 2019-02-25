@@ -19,8 +19,12 @@ class ParkingDbHelper(context: Context?, name: String?, factory: SQLiteDatabase.
         private const val DB_NAME = "parking.db"
         private const val VERSION = 1
 
-        fun getWritableDatabase(context: Context?): SQLiteDatabase {
-            return ParkingDbHelper(context, DB_NAME, null, VERSION).writableDatabase
+        private var instance: ParkingDbHelper? = null
+        fun getInstance(context: Context?): ParkingDbHelper {
+            if (instance == null) {
+                instance = ParkingDbHelper(context, DB_NAME, null, VERSION)
+            }
+            return instance!!
         }
     }
 }

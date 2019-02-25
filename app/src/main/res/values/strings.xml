@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">新北市路外公用停車場資訊</string>
     <string name="parking_list_title">新北市路外公用停車場</string>
-    <string name="data_downloading">下載資料中...</string>
     <string name="parking_name">停車場名稱</string>
     <string name="area">區域</string>
     <string name="servicetime">服務時間</string>
@@ -10,4 +9,10 @@
     <string name="name_search">名稱搜尋</string>
     <string name="load_map_fail">載入地圖失敗</string>
     <string name="load_routes_fail">載入路線規劃失敗</string>
+    <string name="download_update_data">下載更新資料</string>
+    <string name="update_data_downloading">下載更新資料中……</string>
+    <string name="download_update_data_description">下載更新資料，提供離線瀏覽</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

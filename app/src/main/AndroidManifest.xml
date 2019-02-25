@@ -42,6 +42,19 @@
             android:name=".parking_detail.ParkingDetailActivity"
             android:screenOrientation="portrait" />
 
+        <service
+            android:name=".update_all_data.UpdateAllDataForegroundService"
+            android:enabled="true"
+            android:exported="false" />
+
+        <receiver android:name=".parking_list.ParkingListActivity$BroadcastReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.mingmin.newtaipeipublicparking.UPDATE_ALL_DATA_SUCCESS" />
+                <action android:name="com.mingmin.newtaipeipublicparking.UPDATE_ALL_DATA_FAIL" />
+            </intent-filter>
+        </receiver>
+
         <uses-library
             android:name="org.apache.http.legacy"
             android:required="false" />

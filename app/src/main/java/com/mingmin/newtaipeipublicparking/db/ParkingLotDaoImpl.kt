@@ -6,36 +6,49 @@ import android.database.Cursor
 import com.mingmin.newtaipeipublicparking.data.ParkingLot
 
 class ParkingLotDaoImpl(context: Context) : ParkingLotDao {
-    private val db = ParkingDbHelper.getWritableDatabase(context)
+    private val helper = ParkingDbHelper.getInstance(context)
 
     override fun count(): Int {
+        val db = helper.readableDatabase
         var count = 0
         val cursor = db.rawQuery(SQL_GET_COUNT, null)
         if (cursor.moveToNext()) {
             count = cursor.getInt(0)
         }
         cursor.close()
+        db.close()
         return count
     }
 
-    override fun close() {
+    override fun insert(parkinglot: ParkingLot) {
+        val db = helper.writableDatabase
+        db.insert(TABLE_NAME, null, parkingLotToContentValues(parkinglot))
         db.close()
     }
 
-    override fun insert(parkinglot: ParkingLot) {
-        db.insert(TABLE_NAME, null, parkingLotToContentValues(parkinglot))
-    }
-
     override fun insertAll(parkingLots: Collection<ParkingLot>) {
-        parkingLots.forEach { insert(it) }
+        var sql = SQL_INSERT_PREFIX
+        for ((index, it) in parkingLots.withIndex()) {
+            sql += """
+                (${it.ID},'${it.AREA}','${it.NAME}',${it.TYPE},'${it.SUMMARY}',
+                '${it.ADDRESS}','${it.TEL}','${it.PAYEX}','${it.SERVICETIME}',${it.TW97X},
+                ${it.TW97Y},${it.TOTALCAR},${it.TOTALMOTOR},${it.TOTALBIKE})
+            """.trimIndent()
+            sql += if (index < parkingLots.size - 1) "," else ";"
+        }
+        val db = helper.writableDatabase
+        db.execSQL(sql)
+        db.close()
     }
 
     override fun update(parkinglot: ParkingLot) {
+        val db = helper.writableDatabase
         db.update(
             TABLE_NAME,
             parkingLotToContentValues(parkinglot),
-            "${COLUMN_PRIMARY_KEY}=${parkinglot._id}",
+            "$COLUMN_PRIMARY_KEY=${parkinglot._id}",
             null)
+        db.close()
     }
 
     override fun updateAll(parkingLots: Collection<ParkingLot>) {
@@ -44,16 +57,20 @@ class ParkingLotDaoImpl(context: Context) : ParkingLotDao {
     }
 
     override fun deleteAll() {
+        val db = helper.writableDatabase
         db.execSQL(SQL_CLEAR_TABLE)
+        db.close()
     }
 
     override fun queryAll(): ArrayList<ParkingLot>? {
+        val db = helper.readableDatabase
         val parkingLots = ArrayList<ParkingLot>()
         val cursor = db.query(TABLE_NAME, null, null, null, null, null, null)
         while (cursor.moveToNext()) {
             parkingLots.add(getParkingLot(cursor))
         }
         cursor.close()
+        db.close()
         return if (parkingLots.isEmpty()) null else parkingLots
     }
 
@@ -70,11 +87,13 @@ class ParkingLotDaoImpl(context: Context) : ParkingLotDao {
             where += "$COLUMN_NAME LIKE '%$it%'"
         }
         val selection = if (where.isEmpty()) null else where
+        val db = helper.readableDatabase
         val cursor = db.query(TABLE_NAME, null, selection, null, null, null, null)
         while(cursor.moveToNext()) {
             parkingLots.add(getParkingLot(cursor))
         }
         cursor.close()
+        db.close()
         return if (parkingLots.isEmpty()) null else parkingLots
     }
 
@@ -157,5 +176,13 @@ class ParkingLotDaoImpl(context: Context) : ParkingLotDao {
         const val SQL_GET_COUNT = "SELECT COUNT(*) FROM $TABLE_NAME"
         const val SQL_DROP_TABLE = "DROP TABLE IF EXISTS $TABLE_NAME"
         const val SQL_CLEAR_TABLE = "DELETE FROM $TABLE_NAME"
+
+        val SQL_INSERT_PREFIX = """
+            INSERT INTO $TABLE_NAME
+            ($COLUMN_ID,$COLUMN_AREA,$COLUMN_NAME,$COLUMN_TYPE,$COLUMN_SUMMARY,
+            $COLUMN_ADDRESS,$COLUMN_TEL,$COLUMN_PAYEX,$COLUMN_SERVICETIME,$COLUMN_TW97X,
+            $COLUMN_TW97Y,$COLUMN_TOTALCAR,$COLUMN_TOTALMOTOR,$COLUMN_TOTALBIKE)
+            VALUES
+        """.trimIndent()
     }
 }

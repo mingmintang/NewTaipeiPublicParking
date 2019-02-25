@@ -1,38 +1,26 @@
 package com.mingmin.newtaipeipublicparking.parking_list
 
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import android.support.v4.content.LocalBroadcastManager
 import android.support.v7.app.AppCompatActivity
-import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import com.mingmin.newtaipeipublicparking.R
-import com.mingmin.newtaipeipublicparking.data.ParkingLot
-import com.mingmin.newtaipeipublicparking.data.ParkingLotRepository
-import com.mingmin.newtaipeipublicparking.data.ParkingLotRepositoryImpl
-import com.mingmin.newtaipeipublicparking.db.ParkingLotDao
-import com.mingmin.newtaipeipublicparking.db.ParkingLotDaoImpl
-import com.mingmin.newtaipeipublicparking.parking_detail.ParkingDetailActivity
-import io.reactivex.disposables.CompositeDisposable
-import kotlinx.android.synthetic.main.activity_parking_list.*
+import kotlinx.android.synthetic.main.fragment_parking_list.*
 
-class ParkingListActivity : AppCompatActivity(),
-    ParkingListContract.View, ParkingListRecyclerViewAdapter.ItemClickListener {
-    private val dispoables = CompositeDisposable()
-    private lateinit var parkingLotDao: ParkingLotDao
-    private lateinit var parkingLotRepository: ParkingLotRepository
-    private lateinit var presenter: ParkingListPresenter
+class ParkingListActivity : AppCompatActivity() {
+    private var contentFragment: ParkingListFragment? = null
+    private var broadcastReceiver: BroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_parking_list)
 
-        parkingLotDao = ParkingLotDaoImpl(applicationContext)
-        parkingLotRepository = ParkingLotRepositoryImpl(parkingLotDao, dispoables)
-        presenter = ParkingListPresenter(parkingLotRepository, this)
-
-        setupAreaSpinner()
-        setupSwipeRefresh()
+        if (savedInstanceState == null) {
+            setupFragment()
+            registerBroadcastReceiver()
+        }
     }
 
     override fun onStart() {
@@ -42,123 +30,43 @@ class ParkingListActivity : AppCompatActivity(),
 
     override fun onDestroy() {
         super.onDestroy()
-        dispoables.clear()
-        parkingLotDao.close()
+        broadcastReceiver?.let { LocalBroadcastManager.getInstance(this).unregisterReceiver(it) }
     }
 
-    private fun setupAreaSpinner() {
-        area_spinner.adapter = ArrayAdapter.createFromResource(
-            applicationContext,
-            R.array.new_taipei_areas,
-            android.R.layout.simple_list_item_1
-        )
-        area_spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+    private fun setupFragment() {
+        contentFragment = ParkingListFragment()
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.add(R.id.contentFrame, contentFragment!!)
+        transaction.commit()
+    }
 
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                parent?.tag?.let {
-                    val notRead = it as String
-                    parent.tag = null
-                    if (notRead == "not_read") return
+    private fun registerBroadcastReceiver() {
+        broadcastReceiver = BroadcastReceiver()
+        val filter = IntentFilter().apply {
+            addAction(ACTION_UPDATE_ALL_DATA_SUCCESS)
+            addAction(ACTION_UPDATE_ALL_DATA_FAIL)
+        }
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            broadcastReceiver!!,
+            filter
+        )
+    }
+
+    inner class BroadcastReceiver : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.action?.let {
+                when (it) {
+                    ACTION_UPDATE_ALL_DATA_SUCCESS -> contentFragment?.loadParkingList(false)
+                    ACTION_UPDATE_ALL_DATA_FAIL -> contentFragment?.showEmptyInfo()
                 }
-                loadParkingList(false)
+                return
             }
+            contentFragment?.showEmptyInfo()
         }
     }
 
-    private fun setupSwipeRefresh() {
-        parking_list_container.setDistanceToTriggerSync(900)
-        parking_list_container.setOnRefreshListener {
-            updateAllData()
-            parking_list_container.isRefreshing = false
-        }
-
-        empty_info_container.setOnRefreshListener {
-            updateAllData()
-            empty_info_container.isRefreshing = false
-        }
-    }
-
-    private fun loadParkingList(forceUpdate: Boolean) {
-        val area: String? = if (area_spinner.selectedItemPosition > 0) {
-            area_spinner.selectedItem.toString()
-        } else {
-            null
-        }
-        val keyword: String? = if (search_input.text.isNullOrEmpty()) {
-            null
-        } else {
-            search_input.text.toString()
-        }
-        presenter.loadParkingList(forceUpdate, area, keyword)
-    }
-
-    private fun updateAllData() {
-        search_input.text?.clear()
-        area_spinner.tag = "not_read"
-        area_spinner.setSelection(0)
-        loadParkingList(true)
-    }
-
-    override fun showParkingList(parkingLots: List<ParkingLot>) {
-        parking_list.adapter = ParkingListRecyclerViewAdapter(
-            ArrayList(parkingLots),
-            this
-        )
-        switchListState(ListState.LIST)
-        enableControllerWidgets(true)
-    }
-
-    override fun showLoading() {
-        switchListState(ListState.LOADING)
-        search_input.clearFocus()
-        enableControllerWidgets(false)
-    }
-
-    override fun showEmptyInfo() {
-        switchListState(ListState.EMPTY)
-        enableControllerWidgets(true)
-    }
-
-    enum class ListState {
-        LIST,
-        EMPTY,
-        LOADING
-    }
-
-    private fun switchListState(state: ListState) {
-        when (state) {
-            ListState.LIST -> {
-                parking_list_container.visibility = View.VISIBLE
-                loading.visibility = View.GONE
-                empty_info_container.visibility = View.GONE
-            }
-            ListState.EMPTY -> {
-                parking_list_container.visibility = View.GONE
-                loading.visibility = View.GONE
-                empty_info_container.visibility = View.VISIBLE
-            }
-            ListState.LOADING -> {
-                parking_list_container.visibility = View.GONE
-                loading.visibility = View.VISIBLE
-                empty_info_container.visibility = View.GONE
-            }
-        }
-    }
-
-    private fun enableControllerWidgets(isEnabled: Boolean) {
-        area_spinner.isEnabled = isEnabled
-        search_button.isEnabled = isEnabled
-        search_input.isEnabled = isEnabled
-    }
-
-    fun onSearchButtonClick(view: View) {
-        loadParkingList(false)
-    }
-
-    override fun onParkingItemClick(parkingLot: ParkingLot) {
-        val intent = Intent(applicationContext, ParkingDetailActivity::class.java)
-        intent.putExtra("ParkingLot", parkingLot)
-        startActivity(intent)
+    companion object {
+        const val ACTION_UPDATE_ALL_DATA_SUCCESS = "com.mingmin.newtaipeipublicparking.UPDATE_ALL_DATA_SUCCESS"
+        const val ACTION_UPDATE_ALL_DATA_FAIL = "com.mingmin.newtaipeipublicparking.UPDATE_ALL_DATA_FAIL"
     }
 }
