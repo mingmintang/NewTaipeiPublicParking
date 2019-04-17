@@ -12,7 +12,7 @@ import io.reactivex.observers.TestObserver
 import org.junit.Before
 import org.junit.Test
 
-class RouteRepositoryImplTest {
+class RouteRepositoryTest {
     private val key = "GoogleDirectionsKey"
     private val from = LatLng(24.9974558,121.4935593)
     private val to = LatLng(25.0017446,121.492276)

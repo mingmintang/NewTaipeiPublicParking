@@ -11,14 +11,11 @@ import io.reactivex.Single
 import io.reactivex.observers.TestObserver
 import org.junit.Before
 import org.junit.Test
+import com.mingmin.newtaipeipublicparking.TestUtils.parkingLots
 
-class ParkingLotRepositoryImplTest {
+class ParkingLotRepositoryTest {
     private val area = "板橋"
     private val keyword = "遠東"
-    private val parkingLots = listOf<ParkingLot>(
-        ParkingLot(1, 10056, "板橋區", "遠東百貨停車場", 2, "立體式建築附設停車空間", "板橋區中山路一段152號", "02-3346773", "小型車計時60元;", "0~24時", 296882.0, 2767068.0, 453, 0, 0),
-        ParkingLot(1, 30034, "中和區", "南華停車場", 2, "平面式臨時路外停車場", "中和區中和路281號邊", "02-1110234", "小型車計時20元;小型車月租3500元;", "6~24時", 301086.0, 2765825.0, 42, 0, 0)
-    )
     private lateinit var repository: ParkingLotRepositoryImpl
 
     @MockK

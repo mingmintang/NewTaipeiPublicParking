@@ -1,4 +1,4 @@
-package com.mingmin.newtaipeipublicparking.utils
+package com.mingmin.newtaipeipublicparking.util
 
 import com.google.android.gms.maps.model.LatLng
 import org.junit.Test
