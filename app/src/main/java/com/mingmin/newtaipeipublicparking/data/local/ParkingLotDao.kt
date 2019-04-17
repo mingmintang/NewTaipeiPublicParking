@@ -1,4 +1,4 @@
-package com.mingmin.newtaipeipublicparking.db
+package com.mingmin.newtaipeipublicparking.data.local
 
 import android.content.Context
 import com.mingmin.newtaipeipublicparking.data.ParkingLot
@@ -10,8 +10,8 @@ interface ParkingLotDao {
     fun update(parkingLot: ParkingLot)
     fun updateAll(parkingLots: Collection<ParkingLot>)
     fun deleteAll()
-    fun queryAll(): ArrayList<ParkingLot>?
-    fun queryByAreaAndKeyword(area: String?, keyword: String?): ArrayList<ParkingLot>?
+    fun queryAll(): List<ParkingLot>
+    fun queryByAreaAndKeyword(area: String?, keyword: String?): List<ParkingLot>
 
     companion object {
         fun newInstance(context: Context): ParkingLotDao {

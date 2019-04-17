@@ -3,30 +3,36 @@ package com.mingmin.newtaipeipublicparking.parking_list
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v4.app.Fragment
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import com.mingmin.newtaipeipublicparking.Injection
 
 import com.mingmin.newtaipeipublicparking.R
 import com.mingmin.newtaipeipublicparking.data.ParkingLot
 import com.mingmin.newtaipeipublicparking.data.ParkingLotRepository
-import com.mingmin.newtaipeipublicparking.data.ParkingLotRepositoryImpl
 import com.mingmin.newtaipeipublicparking.parking_detail.ParkingDetailActivity
-import com.mingmin.newtaipeipublicparking.platform_model.AndroidModel
+import com.mingmin.newtaipeipublicparking.parking_list.ParkingListRecyclerViewAdapter.ItemClickListener
+import com.mingmin.newtaipeipublicparking.update_all_data.AndroidForegroundService
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.fragment_parking_list.*
 
 
-class ParkingListFragment : Fragment(),
-    ParkingListContract.View, ParkingListRecyclerViewAdapter.ItemClickListener{
+class ParkingListFragment : Fragment(), ParkingListContract.View {
 
     private lateinit var dispoables: CompositeDisposable
     private lateinit var parkingLotRepository: ParkingLotRepository
     private lateinit var presenter: ParkingListPresenter
     private var currentAreaPosition = -1
+
+    private val itemClickListener = object : ItemClickListener {
+        override fun onParkingItemClick(parkingLot: ParkingLot) {
+            presenter.openParkingLotDetail(parkingLot)
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -36,8 +42,14 @@ class ParkingListFragment : Fragment(),
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         dispoables = CompositeDisposable()
-        parkingLotRepository = ParkingLotRepositoryImpl(AndroidModel(context!!), dispoables)
-        presenter = ParkingListPresenter(parkingLotRepository, this)
+        parkingLotRepository = Injection.provideParkingLotRepository(context!!)
+        presenter = ParkingListPresenter(
+            dispoables,
+            Injection.provideSchedulerProvider(),
+            parkingLotRepository,
+            this,
+            AndroidForegroundService(context!!)
+        )
 
         setupSearchInput()
         setupSwipeRefresh()
@@ -46,7 +58,7 @@ class ParkingListFragment : Fragment(),
 
     override fun onStart() {
         super.onStart()
-        search_input.clearFocus()
+        keyword_input.clearFocus()
     }
 
     override fun onDestroyView() {
@@ -66,13 +78,13 @@ class ParkingListFragment : Fragment(),
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (currentAreaPosition == position) { return }
                 currentAreaPosition = position
-                loadParkingList(false)
+                loadParkingList()
             }
         }
     }
 
     private fun setupSearchInput() {
-        search_button.setOnClickListener { loadParkingList(false) }
+        keyword_button.setOnClickListener { loadParkingList() }
     }
 
     private fun setupSwipeRefresh() {
@@ -88,31 +100,31 @@ class ParkingListFragment : Fragment(),
         }
     }
 
-    fun loadParkingList(forceUpdate: Boolean) {
+    fun loadParkingList(forceUpdate: Boolean = false) {
         val area: String? = if (area_spinner.selectedItemPosition > 0) {
             area_spinner.selectedItem.toString()
         } else {
             null
         }
-        val keyword: String? = if (search_input.text.isNullOrEmpty()) {
+        val keyword: String? = if (keyword_input.text.isNullOrEmpty()) {
             null
         } else {
-            search_input.text.toString()
+            keyword_input.text.toString()
         }
         presenter.loadParkingList(forceUpdate, area, keyword)
     }
 
     private fun updateAllData() {
-        search_input.text?.clear()
+        keyword_input.text?.clear()
         currentAreaPosition = 0
         area_spinner.setSelection(0)
-        loadParkingList(true)
+        presenter.loadParkingList(true, null, null)
     }
 
     override fun showParkingList(parkingLots: List<ParkingLot>) {
         parking_list.adapter = ParkingListRecyclerViewAdapter(
             ArrayList(parkingLots),
-            this
+            itemClickListener
         )
         switchListState(ListState.LIST)
         enableControllerWidgets(true)
@@ -120,13 +132,19 @@ class ParkingListFragment : Fragment(),
 
     override fun showLoading() {
         switchListState(ListState.LOADING)
-        search_input.clearFocus()
+        keyword_input.clearFocus()
         enableControllerWidgets(false)
     }
 
     override fun showEmptyInfo() {
         switchListState(ListState.EMPTY)
         enableControllerWidgets(true)
+    }
+
+    override fun showParkingLotDetail(parkingLot: ParkingLot) {
+        val intent = Intent(context, ParkingDetailActivity::class.java)
+        intent.putExtra(ParkingDetailActivity.KEY_PARKING_LOT, parkingLot)
+        startActivity(intent)
     }
 
     enum class ListState {
@@ -157,13 +175,7 @@ class ParkingListFragment : Fragment(),
 
     private fun enableControllerWidgets(isEnabled: Boolean) {
         area_spinner.isEnabled = isEnabled
-        search_button.isEnabled = isEnabled
-        search_input.isEnabled = isEnabled
-    }
-
-    override fun onParkingItemClick(parkingLot: ParkingLot) {
-        val intent = Intent(context, ParkingDetailActivity::class.java)
-        intent.putExtra("ParkingLot", parkingLot)
-        startActivity(intent)
+        keyword_button.isEnabled = isEnabled
+        keyword_input.isEnabled = isEnabled
     }
 }

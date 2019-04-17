@@ -2,31 +2,31 @@ package com.mingmin.newtaipeipublicparking.data
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.mingmin.newtaipeipublicparking.utils.Converts
+import com.mingmin.newtaipeipublicparking.util.Converts
 import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
 import java.lang.reflect.Type
 
-class RoutesRetrofitConverter : Converter<ResponseBody, ArrayList<Route>> {
-    override fun convert(body: ResponseBody): ArrayList<Route>? {
+class RoutesRetrofitConverter : Converter<ResponseBody, List<Route>> {
+    override fun convert(body: ResponseBody): List<Route>? {
         val json = body.string()
         val mapper = ObjectMapper().registerKotlinModule()
-        val routes = ArrayList<Route>()
+        val routes = mutableListOf<Route>()
         val routesNode = mapper.readTree(json)["routes"]
         return if (routesNode == null) {
             null
         } else {
             routesNode.forEach { routeNode ->
                 val stepNodes = routeNode["legs"][0]["steps"]
-                val encodedPoints = ArrayList<String>()
+                val encodedPoints = mutableListOf<String>()
                 stepNodes.forEach { stepNode -> encodedPoints.add(stepNode["polyline"]["points"].asText()) }
                 val points = encodedPoints.flatMap { encodedPoint ->
-                    Converts.decodePolylinePoints(encodedPoint)
+                    Converts.polylinePointsToLatLngs(encodedPoint)
                 }
                 routes.add(Route(points))
             }
-            routes
+            routes.toList()
         }
     }
 

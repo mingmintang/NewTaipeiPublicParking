@@ -4,9 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import android.support.v4.content.LocalBroadcastManager
-import android.support.v7.app.AppCompatActivity
+import androidx.annotation.VisibleForTesting
+import androidx.test.espresso.IdlingResource
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.appcompat.app.AppCompatActivity
 import com.mingmin.newtaipeipublicparking.R
+import com.mingmin.newtaipeipublicparking.util.EspressoIdlingResource
 import kotlinx.android.synthetic.main.fragment_parking_list.*
 
 class ParkingListActivity : AppCompatActivity() {
@@ -25,7 +28,7 @@ class ParkingListActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        search_input.clearFocus()
+        keyword_input.clearFocus()
     }
 
     override fun onDestroy() {
@@ -56,7 +59,7 @@ class ParkingListActivity : AppCompatActivity() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.action?.let {
                 when (it) {
-                    ACTION_UPDATE_ALL_DATA_SUCCESS -> contentFragment?.loadParkingList(false)
+                    ACTION_UPDATE_ALL_DATA_SUCCESS -> contentFragment?.loadParkingList()
                     ACTION_UPDATE_ALL_DATA_FAIL -> contentFragment?.showEmptyInfo()
                 }
                 return
@@ -68,5 +71,10 @@ class ParkingListActivity : AppCompatActivity() {
     companion object {
         const val ACTION_UPDATE_ALL_DATA_SUCCESS = "com.mingmin.newtaipeipublicparking.UPDATE_ALL_DATA_SUCCESS"
         const val ACTION_UPDATE_ALL_DATA_FAIL = "com.mingmin.newtaipeipublicparking.UPDATE_ALL_DATA_FAIL"
+    }
+
+    @VisibleForTesting
+    fun getCountingIdlingResource(): IdlingResource {
+        return EspressoIdlingResource.getIdlingResource()
     }
 }

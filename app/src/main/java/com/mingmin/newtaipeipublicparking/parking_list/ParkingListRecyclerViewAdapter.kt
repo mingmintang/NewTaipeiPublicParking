@@ -1,6 +1,6 @@
 package com.mingmin.newtaipeipublicparking.parking_list
 
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,10 +15,17 @@ class ParkingListRecyclerViewAdapter(val parkingLots: ArrayList<ParkingLot>, val
         val area = itemView.findViewById<TextView>(R.id.parking_area)!!
         val servicetime = itemView.findViewById<TextView>(R.id.parking_servicetime)!!
         val address = itemView.findViewById<TextView>(R.id.parking_address)!!
+        lateinit var parkingLot: ParkingLot
 
         init {
+            itemView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewDetachedFromWindow(view: View?) {}
+                override fun onViewAttachedToWindow(view: View?) {
+                    parkingLot = parkingLots[adapterPosition]
+                }
+            })
             itemView.setOnClickListener {
-                listener.onParkingItemClick(parkingLots[adapterPosition])
+                listener.onParkingItemClick(parkingLot)
             }
         }
     }

@@ -3,13 +3,13 @@ package com.mingmin.newtaipeipublicparking.data
 import android.os.Parcelable
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import kotlinx.android.parcel.IgnoredOnParcel
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties("_id")
-data class ParkingLot(val _id: Long,
-                      val ID: Int,
+data class ParkingLot(val ID: Int,
                       val AREA: String,
                       val NAME: String,
                       val TYPE: Int,
@@ -23,4 +23,7 @@ data class ParkingLot(val _id: Long,
                       val TOTALCAR: Int,
                       val TOTALMOTOR: Int,
                       val TOTALBIKE: Int
-) : Parcelable
+) : Parcelable {
+    @IgnoredOnParcel
+    var _id: Long = 0
+}

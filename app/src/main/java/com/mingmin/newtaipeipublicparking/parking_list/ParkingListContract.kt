@@ -7,9 +7,11 @@ interface ParkingListContract {
         fun showParkingList(parkingLots: List<ParkingLot>)
         fun showLoading()
         fun showEmptyInfo()
+        fun showParkingLotDetail(parkingLot: ParkingLot)
     }
 
     interface ActionsListener {
         fun loadParkingList(forceUpdate: Boolean, area: String?, keyword: String?)
+        fun openParkingLotDetail(parkingLot: ParkingLot)
     }
 }

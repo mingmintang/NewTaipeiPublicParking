@@ -1,44 +1,37 @@
 package com.mingmin.newtaipeipublicparking.parking_detail
 
-import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Context
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.mingmin.newtaipeipublicparking.data.MapsApiLatLng
 import com.mingmin.newtaipeipublicparking.data.Route
-import com.mingmin.newtaipeipublicparking.data.RouteService
-import io.reactivex.android.schedulers.AndroidSchedulers
+import com.mingmin.newtaipeipublicparking.data.RouteRepository
+import com.mingmin.newtaipeipublicparking.map.GoogleMapProvider
+import com.mingmin.newtaipeipublicparking.util.EspressoIdlingResource
+import com.mingmin.newtaipeipublicparking.util.schedulers.SchedulerProvider
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.observers.DisposableSingleObserver
-import io.reactivex.schedulers.Schedulers
 
-class ParkingDetailPresenter(private val disposables: CompositeDisposable,
+class ParkingDetailPresenter(private val googleMapProvider: GoogleMapProvider,
+                             private val disposables: CompositeDisposable,
+                             private val routeRepository: RouteRepository,
+                             private val schedulerProvider: SchedulerProvider,
                              private val parkingDetailView: ParkingDetailContract.View)
     : ParkingDetailContract.ActionsListener {
 
-    private val routeService = RouteService.create()
-
-    override fun loadMap(mapFragment: SupportMapFragment) {
+    override fun loadMap() {
         parkingDetailView.showMapLoading(true)
-        mapFragment.getMapAsync { googleMap ->
+        EspressoIdlingResource.increment()
+        googleMapProvider.loadMap { googleMap ->
             parkingDetailView.showMap(googleMap)
             parkingDetailView.showMapLoading(false)
+            EspressoIdlingResource.decrement()
         }
     }
 
-    @SuppressLint("MissingPermission")
-    override fun loadMyLocation(context: Context) {
-        LocationServices.getFusedLocationProviderClient(context)
-            .lastLocation.addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val location = task.result
-                location?.let {
-                    parkingDetailView.showMyLocation(LatLng(it.latitude, it.longitude))
-                    parkingDetailView.showRoutesButton()
-                }
-            }
+    override fun loadMyLocation() {
+        EspressoIdlingResource.increment()
+        googleMapProvider.loadMyLocation { location ->
+            parkingDetailView.showMyLocation(LatLng(location.latitude, location.longitude))
+            parkingDetailView.showRoutesButton()
+            EspressoIdlingResource.decrement()
         }
     }
 
@@ -47,17 +40,17 @@ class ParkingDetailPresenter(private val disposables: CompositeDisposable,
                             googleDirectionsKey: String) {
         parkingDetailView.showMapLoading(true)
         disposables.add(
-            routeService.getRoutes(MapsApiLatLng(myLocation), MapsApiLatLng(parkingLotLocation), googleDirectionsKey)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(object : DisposableSingleObserver<ArrayList<Route>>() {
-                    override fun onSuccess(routes: ArrayList<Route>) {
-                        parkingDetailView.showMapLoading(false)
+            routeRepository.getRoutes(myLocation, parkingLotLocation, googleDirectionsKey)
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.ui())
+                .subscribeWith(object : DisposableSingleObserver<List<Route>>() {
+                    override fun onSuccess(routes: List<Route>) {
                         parkingDetailView.showRoutes(myLocation, parkingLotLocation, routes)
+                        parkingDetailView.showMapLoading(false)
                     }
                     override fun onError(e: Throwable) {
-                        parkingDetailView.showMapLoading(false)
                         parkingDetailView.showLoadRoutesFail()
+                        parkingDetailView.showMapLoading(false)
                     }
                 })
         )

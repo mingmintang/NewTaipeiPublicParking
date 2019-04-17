@@ -1,5 +1,7 @@
-package com.mingmin.newtaipeipublicparking.data
+package com.mingmin.newtaipeipublicparking.data.remote
 
+import com.mingmin.newtaipeipublicparking.data.ParkingLot
+import com.mingmin.newtaipeipublicparking.data.ParkingLotsRetrofitConverter
 import io.reactivex.Single
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory

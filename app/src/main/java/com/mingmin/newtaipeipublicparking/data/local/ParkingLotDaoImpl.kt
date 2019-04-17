@@ -1,11 +1,12 @@
-package com.mingmin.newtaipeipublicparking.db
+package com.mingmin.newtaipeipublicparking.data.local
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import com.mingmin.newtaipeipublicparking.data.ParkingLot
 
-class ParkingLotDaoImpl(context: Context) : ParkingLotDao {
+class ParkingLotDaoImpl(context: Context) :
+    ParkingLotDao {
     private val helper = ParkingDbHelper.getInstance(context)
 
     override fun count(): Int {
@@ -27,7 +28,8 @@ class ParkingLotDaoImpl(context: Context) : ParkingLotDao {
     }
 
     override fun insertAll(parkingLots: Collection<ParkingLot>) {
-        var sql = SQL_INSERT_PREFIX
+        var sql =
+            SQL_INSERT_PREFIX
         for ((index, it) in parkingLots.withIndex()) {
             sql += """
                 (${it.ID},'${it.AREA}','${it.NAME}',${it.TYPE},'${it.SUMMARY}',
@@ -62,20 +64,20 @@ class ParkingLotDaoImpl(context: Context) : ParkingLotDao {
         db.close()
     }
 
-    override fun queryAll(): ArrayList<ParkingLot>? {
+    override fun queryAll(): List<ParkingLot> {
         val db = helper.readableDatabase
-        val parkingLots = ArrayList<ParkingLot>()
+        val parkingLots = mutableListOf<ParkingLot>()
         val cursor = db.query(TABLE_NAME, null, null, null, null, null, null)
         while (cursor.moveToNext()) {
             parkingLots.add(getParkingLot(cursor))
         }
         cursor.close()
         db.close()
-        return if (parkingLots.isEmpty()) null else parkingLots
+        return parkingLots
     }
 
-    override fun queryByAreaAndKeyword(area: String?, keyword: String?): ArrayList<ParkingLot>? {
-        val parkingLots = ArrayList<ParkingLot>()
+    override fun queryByAreaAndKeyword(area: String?, keyword: String?): List<ParkingLot> {
+        val parkingLots = mutableListOf<ParkingLot>()
         var where = ""
         area?.let {
             where += "$COLUMN_AREA='$it'"
@@ -94,12 +96,11 @@ class ParkingLotDaoImpl(context: Context) : ParkingLotDao {
         }
         cursor.close()
         db.close()
-        return if (parkingLots.isEmpty()) null else parkingLots
+        return parkingLots
     }
 
     private fun getParkingLot(cursor: Cursor): ParkingLot {
-        return ParkingLot(
-            _id = cursor.getLong(0),
+        val parkingLot = ParkingLot(
             ID = cursor.getInt(1),
             AREA = cursor.getString(2),
             NAME = cursor.getString(3),
@@ -115,6 +116,8 @@ class ParkingLotDaoImpl(context: Context) : ParkingLotDao {
             TOTALMOTOR = cursor.getInt(13),
             TOTALBIKE = cursor.getInt(14)
         )
+        parkingLot._id = cursor.getLong(0)
+        return parkingLot
     }
 
     private fun parkingLotToContentValues(parkingLot: ParkingLot): ContentValues {

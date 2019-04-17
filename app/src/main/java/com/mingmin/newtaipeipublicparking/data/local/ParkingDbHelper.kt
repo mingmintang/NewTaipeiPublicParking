@@ -1,4 +1,4 @@
-package com.mingmin.newtaipeipublicparking.db
+package com.mingmin.newtaipeipublicparking.data.local
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase

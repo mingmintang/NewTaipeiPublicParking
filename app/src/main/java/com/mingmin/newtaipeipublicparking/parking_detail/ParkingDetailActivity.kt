@@ -5,10 +5,12 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Color
 import android.os.Bundle
-import android.support.design.widget.Snackbar
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
+import androidx.annotation.VisibleForTesting
+import com.google.android.material.snackbar.Snackbar
+import androidx.test.espresso.IdlingResource
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -17,10 +19,13 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
+import com.mingmin.newtaipeipublicparking.Injection
 import com.mingmin.newtaipeipublicparking.R
 import com.mingmin.newtaipeipublicparking.data.ParkingLot
 import com.mingmin.newtaipeipublicparking.data.Route
-import com.mingmin.newtaipeipublicparking.utils.Converts
+import com.mingmin.newtaipeipublicparking.map.AndroidGoogleMapProvider
+import com.mingmin.newtaipeipublicparking.util.Converts
+import com.mingmin.newtaipeipublicparking.util.EspressoIdlingResource
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_parking_detail.*
 
@@ -36,11 +41,19 @@ class ParkingDetailActivity : AppCompatActivity(), ParkingDetailContract.View {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_parking_detail)
 
-        parkingLot = intent.getParcelableExtra("ParkingLot")
-        parkingLotLocation = Converts.twd97ToLatLong(parkingLot.TW97X, parkingLot.TW97Y)
+        parkingLot = intent.getParcelableExtra(KEY_PARKING_LOT)
+        parkingLotLocation = Converts.twd97ToLatLng(parkingLot.TW97X, parkingLot.TW97Y)
         setupViews()
-        presenter = ParkingDetailPresenter(disposables, this)
-        presenter.loadMap(supportFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment)
+        val googleMapProvider = AndroidGoogleMapProvider(this,
+            supportFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment)
+        presenter = ParkingDetailPresenter(
+            googleMapProvider,
+            disposables,
+            Injection.provideRouteRepository(),
+            Injection.provideSchedulerProvider(),
+            this
+        )
+        presenter.loadMap()
     }
 
     private fun setupViews() {
@@ -69,7 +82,7 @@ class ParkingDetailActivity : AppCompatActivity(), ParkingDetailContract.View {
         this.myLocation = myLocation
     }
 
-    override fun showRoutes(myLocation: LatLng, parkingLotLocation: LatLng, routes: ArrayList<Route>) {
+    override fun showRoutes(myLocation: LatLng, parkingLotLocation: LatLng, routes: List<Route>) {
         val colorArray = arrayOf(
             Color.parseColor("#77F20B0B"),
             Color.parseColor("#77680DE5"),
@@ -108,11 +121,9 @@ class ParkingDetailActivity : AppCompatActivity(), ParkingDetailContract.View {
         Snackbar.make(map_fragment.view!!, getString(R.string.load_routes_fail), Snackbar.LENGTH_SHORT).show()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<out String>,
+                                            grantResults: IntArray) {
         if (permissions.size == 1 &&
             permissions[0] == ACCESS_FINE_LOCATION &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -121,13 +132,12 @@ class ParkingDetailActivity : AppCompatActivity(), ParkingDetailContract.View {
     }
 
     private fun setupMyLocation() {
-        if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION)
-            != PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(ACCESS_FINE_LOCATION), 1)
             return
         }
         map.isMyLocationEnabled = true
-        presenter.loadMyLocation(this)
+        presenter.loadMyLocation()
     }
 
     private fun drawRoute(from: LatLng, to: LatLng, points: List<LatLng>,
@@ -150,5 +160,14 @@ class ParkingDetailActivity : AppCompatActivity(), ParkingDetailContract.View {
         myLocation?.let {
             presenter.loadRoutes(it, parkingLotLocation, resources.getString(R.string.google_directions_key))
         }
+    }
+
+    @VisibleForTesting
+    fun getCountingIdlingResource(): IdlingResource {
+        return EspressoIdlingResource.getIdlingResource()
+    }
+
+    companion object {
+        const val KEY_PARKING_LOT = "ParkingLot"
     }
 }

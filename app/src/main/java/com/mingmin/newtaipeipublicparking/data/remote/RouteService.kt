@@ -1,6 +1,8 @@
-package com.mingmin.newtaipeipublicparking.data
+package com.mingmin.newtaipeipublicparking.data.remote
 
 import com.google.android.gms.maps.model.LatLng
+import com.mingmin.newtaipeipublicparking.data.Route
+import com.mingmin.newtaipeipublicparking.data.RoutesRetrofitConverter
 import io.reactivex.Single
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -17,7 +19,7 @@ interface RouteService {
         @Query("origin") from: MapsApiLatLng,
         @Query("destination") to: MapsApiLatLng,
         @Query("key") googleDirectionsKey: String
-    ): Single<ArrayList<Route>>
+    ): Single<List<Route>>
 
     companion object {
         const val MAPS_API_BASE_URL = "https://maps.googleapis.com/maps/api/"
@@ -33,7 +35,7 @@ interface RouteService {
     }
 }
 
-class MapsApiLatLng(val location: LatLng) {
+data class MapsApiLatLng(private val location: LatLng) {
     override fun toString(): String {
         return "${location.latitude},${location.longitude}"
     }
