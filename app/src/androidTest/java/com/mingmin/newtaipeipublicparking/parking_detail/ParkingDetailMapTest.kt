@@ -1,78 +1,83 @@
 package com.mingmin.newtaipeipublicparking.parking_detail
 
-import android.Manifest
+import android.content.Context
 import android.content.Intent
-import android.support.test.InstrumentationRegistry
-import android.support.test.espresso.Espresso.onView
-import android.support.test.espresso.IdlingRegistry
-import android.support.test.espresso.IdlingResource
-import android.support.test.espresso.action.ViewActions.click
-import android.support.test.espresso.assertion.ViewAssertions.matches
-import android.support.test.espresso.matcher.ViewMatchers.isDisplayed
-import android.support.test.espresso.matcher.ViewMatchers.withId
-import android.support.test.filters.LargeTest
-import android.support.test.rule.ActivityTestRule
-import android.support.test.rule.GrantPermissionRule
-import android.support.test.runner.AndroidJUnit4
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.IdlingResource
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.ActivityTestRule
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
+import com.mingmin.newtaipeipublicparking.AndroidTestUtils
+import com.mingmin.newtaipeipublicparking.AndroidTestUtils.parkingLot1
 import com.mingmin.newtaipeipublicparking.R
-import com.mingmin.newtaipeipublicparking.data.ParkingLot
+import com.mingmin.newtaipeipublicparking.parking_detail.ParkingDetailActivity.Companion.KEY_PARKING_LOT
 import org.hamcrest.Matchers.not
-import org.junit.After
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class ParkingDetailLoadingTest {
-    private val parkingLot = ParkingLot(1, 10056, "板橋區", "遠東百貨停車場", 2,
-        "立體式建築附設停車空間", "板橋區中山路一段152號", "", "小型車計時60元;",
-        "0~24時", 296882.0, 2767068.0, 453, 0, 0)
-    private lateinit var countingIdlingResource: IdlingResource
-
+class ParkingDetailMapTest {
     @Rule
     @JvmField
-    val permissionRule = GrantPermissionRule.grant("android.location.GPS_ENABLED_CHANGE")
+    val parkingDetailTestRule = ActivityTestRule(ParkingDetailActivity::class.java, false, false)
+    private val instrumentation = InstrumentationRegistry.getInstrumentation()
+    private val uiDevice = UiDevice.getInstance(instrumentation)
+    private val launchActivity = LaunchActivity(parkingDetailTestRule, instrumentation.targetContext, uiDevice)
 
-    @Rule
-    @JvmField
-    val parkingDetailTestRule =
-        object : ActivityTestRule<ParkingDetailActivity>(ParkingDetailActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-            val targetContext = InstrumentationRegistry.getTargetContext()
-            val intent = Intent(targetContext, ParkingDetailActivity::class.java)
-            intent.putExtra("ParkingLot", parkingLot)
-            return intent
-        }
-    }
-
-    @Before
-    fun setup() {
-//        countingIdlingResource = parkingDetailTestRule.activity.getCountingIdlingResource()
-//        IdlingRegistry.getInstance().register(countingIdlingResource)
-    }
-
-    @After
-    fun clear() {
-//        IdlingRegistry.getInstance().unregister(countingIdlingResource)
+    @Test
+    fun loadMap_allowLocationPermission_showMyLocation() {
+        launchActivity.open()
+        launchActivity.allowPermission(true)
+        onView(withId(R.id.routes)).check(matches(isDisplayed()))
+        val parkingLotMaker = uiDevice.findObject(UiSelector().descriptionContains(parkingLot1.NAME))
+        parkingLotMaker.click()
+        launchActivity.close()
     }
 
     @Test
-    fun loadMap_showMyLocationAndRoutes() {
-        countingIdlingResource = parkingDetailTestRule.activity.getCountingIdlingResource()
-        IdlingRegistry.getInstance().register(countingIdlingResource)
-        onView(withId(R.id.routes)).check(matches(isDisplayed()))
-        IdlingRegistry.getInstance().unregister(countingIdlingResource)
+    fun loadMap_DenyLocationPermission_NotShowMyLocation() {
+        launchActivity.open()
+        launchActivity.allowPermission(false)
+        onView(withId(R.id.routes)).check(matches(not(isDisplayed())))
+        val parkingLotMaker = uiDevice.findObject(UiSelector().descriptionContains(parkingLot1.NAME))
+        parkingLotMaker.click()
+        launchActivity.close()
+    }
 
-        onView(withId(R.id.routes)).perform(click())
-        IdlingRegistry.getInstance().register(countingIdlingResource)
-//        onView()
-//        IdlingRegistry.getInstance().unregister(countingIdlingResource)
+    private class LaunchActivity(val parkingDetailTestRule: ActivityTestRule<ParkingDetailActivity>,
+                                 val context: Context,
+                                 val uiDevice: UiDevice) {
+        private lateinit var idlingResource: IdlingResource
 
-        Thread.sleep(3000)
-        val intent = Intent("android.location.GPS_ENABLED_CHANGE")
-        intent.putExtra("enabled", false)
-        InstrumentationRegistry.getTargetContext().sendBroadcast(intent)
+        fun open() {
+            val intent = Intent(context, ParkingDetailActivity::class.java)
+            intent.putExtra(KEY_PARKING_LOT, parkingLot1)
+            parkingDetailTestRule.launchActivity(intent)
+
+            idlingResource = parkingDetailTestRule.activity.getCountingIdlingResource()
+            IdlingRegistry.getInstance().register(idlingResource)
+        }
+
+        fun close() {
+            IdlingRegistry.getInstance().unregister(idlingResource)
+            parkingDetailTestRule.finishActivity()
+        }
+
+        fun allowPermission(isAllowed: Boolean) {
+            AndroidTestUtils.allowPermission(uiDevice, isAllowed)
+            if (isAllowed) {
+                IdlingRegistry.getInstance().unregister(idlingResource)
+                IdlingRegistry.getInstance().register(idlingResource)
+            }
+        }
     }
 }

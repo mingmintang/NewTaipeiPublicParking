@@ -1,20 +1,22 @@
 package com.mingmin.newtaipeipublicparking
 
-import android.support.test.espresso.Espresso
-import android.support.test.espresso.PerformException
-import android.support.test.espresso.UiController
-import android.support.test.espresso.ViewAction
-import android.support.test.espresso.matcher.ViewMatchers
-import android.support.test.espresso.matcher.ViewMatchers.withId
-import android.support.test.espresso.util.HumanReadables
-import android.support.v7.widget.RecyclerView
+import androidx.test.espresso.Espresso
+import androidx.test.espresso.PerformException
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.util.HumanReadables
+import androidx.recyclerview.widget.RecyclerView
 import android.view.View
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import com.mingmin.newtaipeipublicparking.data.ParkingLot
 import com.mingmin.newtaipeipublicparking.parking_list.ParkingListRecyclerViewAdapter
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
 
-object TestUtils {
+object AndroidTestUtils {
     val parkingLot1 = ParkingLot(10056, "板橋區", "遠東百貨停車場", 2,
         "立體式建築附設停車空間", "板橋區中山路一段152號", "", "小型車計時60元;",
         "0~24時", 296882.0, 2767068.0, 453, 0, 0)
@@ -56,5 +58,11 @@ object TestUtils {
             }
         })
         return parkingLot
+    }
+
+    fun allowPermission(uiDevice: UiDevice, isAllowed: Boolean) {
+        val allow = uiDevice.findObject(UiSelector().text("ALLOW"))
+        val deny = uiDevice.findObject(UiSelector().text("DENY"))
+        if (isAllowed) allow.click() else deny.click()
     }
 }
